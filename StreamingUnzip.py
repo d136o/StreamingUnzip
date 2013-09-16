@@ -50,6 +50,9 @@ class StreamingUnzipFile(zipfile.ZipFile):
         
         super(StreamingUnzipFile, self).__init__(centralDirFile)
         
+        if not isinstance(centralDirFile, basestring):
+            centralDirFile.close()
+        
         self.fp = _ZipDataStream_(inputStream)
         self._filePassed = 1
         self._consumed_all_entries = False

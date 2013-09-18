@@ -50,11 +50,13 @@ class StreamingUnzipFile(zipfile.ZipFile):
         
         super(StreamingUnzipFile, self).__init__(centralDirFile)
         
+        if not isinstance(centralDirFile, basestring):
+            centralDirFile.close()
+        
         self.fp = _ZipDataStream_(inputStream)
         self._filePassed = 1
         self._consumed_all_entries = False
-        
-        
+                
         #fix offset in each of the zip file entries
         for info in self.infolist():
             info.header_offset = info.header_offset + centralDirFileOffset
@@ -64,15 +66,9 @@ class StreamingUnzipFile(zipfile.ZipFile):
         '''Generates file like objects for each of the entries in this
         streaming zip file. 
         '''
-
         if not self._consumed_all_entries:
             for info in self.infolist():
-                print 'filename: %s' % info.filename
-                print 'header offset: %s' % info.header_offset
-                print 'current offset %s' % self.fp.tell()
-                print '---------------'
                 yield self.open(info)
-
         self._consumed_all_entries = True
 
         
@@ -83,9 +79,6 @@ class StreamingUnzipFile(zipfile.ZipFile):
 
         for f in sz.generate_streams():
             print f.readline()
-            print 'FINISHED FILE'
-
-
 
 def main(argv=None):
     

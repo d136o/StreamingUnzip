@@ -56,13 +56,14 @@ class StreamingUnzipFile(zipfile.ZipFile):
         self.fp = _ZipDataStream_(inputStream)
         self._filePassed = 1
         self._consumed_all_entries = False
+        self._outputStream = outputStream
                 
         #fix offset in each of the zip file entries
         for info in self.infolist():
             info.header_offset = info.header_offset + centralDirFileOffset
             
 
-    def generate_streams(self):
+    def generateFileStreams(self):
         '''Generates file like objects for each of the entries in this
         streaming zip file. 
         '''
@@ -71,14 +72,11 @@ class StreamingUnzipFile(zipfile.ZipFile):
                 yield self.open(info)
         self._consumed_all_entries = True
 
-        
-    @classmethod
-    def demo(cls,central_dir_filename, offset, instream):
-        
-        sz = StreamingUnzipFile(central_dir_filename, offset, instream, '')
-
-        for f in sz.generate_streams():
-            print f.readline()
+    def streamOut(self):
+        for f in self.generateFileStreams():
+            for l in f:
+                sys.stdout.write(l)
+        self._outputStream.flush()
 
 def main(argv=None):
     
@@ -94,14 +92,15 @@ def main(argv=None):
 
     args = parser.parse_args(argv[1:])
 
-    StreamingUnzipFile.demo(args.centralDirFile,
-                            args.centralDirFileOffset,
-                            sys.stdin)
+    suz = StreamingUnzipFile(args.centralDirFile,
+                             args.centralDirFileOffset,
+                             sys.stdin,
+                             sys.stdout)
+
+    suz.streamOut()
+
+
 
 if __name__=='__main__':
     sys.exit(main())
-    
-    
 
-    
-    

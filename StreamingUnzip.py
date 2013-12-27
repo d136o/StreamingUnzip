@@ -46,6 +46,10 @@ class StreamingUnzipFile(zipfile.ZipFile):
     to parse the inputStream, it is output to outputStream.
     """
     
+    #max number of bytes to write to output stream, equivalent to max number
+    #of bytes to be decompressed at one time
+    MAX_READ = 1000000 
+    
     def __init__(self, centralDirFile, centralDirFileOffset, inputStream, outputStream):
         
         super(StreamingUnzipFile, self).__init__(centralDirFile)
@@ -74,8 +78,8 @@ class StreamingUnzipFile(zipfile.ZipFile):
 
     def streamOut(self):
         for f in self.generateFileStreams():
-            for l in f:
-                sys.stdout.write(l)
+            for l in iter(lambda: f.read1(self.MAX_READ),''):
+                self._outputStream.write(l)
         self._outputStream.flush()
 
 def main(argv=None):
